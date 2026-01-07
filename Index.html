@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mapa interactivo de horas</title>
+<link rel="stylesheet" href="style.css">
+<!-- Cargar Leaflet desde CDN -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+<h1>🌍 Mapa interactivo de horas</h1>
+<div id="map"></div>
+<div id="info"></div>
+
+<script>
+const cities = [
+  { name: "Lima, Perú", zone: "America/Lima", coords: [-12.0464, -77.0428] },
+  { name: "Tokio, Japón", zone: "Asia/Tokyo", coords: [35.6762, 139.6503] },
+  { name: "Londres, Inglaterra", zone: "Europe/London", coords: [51.5074, -0.1278] },
+  { name: "Sídney, Australia", zone: "Australia/Sydney", coords: [-33.8688, 151.2093] },
+  { name: "Lagos, Nigeria", zone: "Africa/Lagos", coords: [6.5244, 3.3792] }
+];
+
+function formatInZone(zone) {
+  const now = new Date();
+  return new Intl.DateTimeFormat('es-ES', {
+    timeZone: zone,
+    weekday: 'long',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  }).format(now);
+}
+
+// Inicializar mapa
+const map = L.map('map').setView([20,0], 2); // vista global
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// Añadir marcadores
+cities.forEach(city => {
+  const marker = L.marker(city.coords).addTo(map);
+  marker.bindPopup(`<b>${city.name}</b><br>${formatInZone(city.zone)}`);
+  marker.on('click', () => {
+    document.getElementById('info').innerHTML =
+      `<h2>${city.name}</h2><p>${formatInZone(city.zone)}</p>`;
+  });
+});
+
+// Actualizar cada segundo
+setInterval(() => {
+  cities.forEach(city => {
+    const popup = `<b>${city.name}</b><br>${formatInZone(city.zone)}`;
+    // Actualizar contenido si el popup está abierto
+    if (map.hasLayer(L.marker(city.coords))) {
+      // Leaflet no actualiza automáticamente, pero el panel lateral sí
+      if (document.getElementById('info').innerHTML.includes(city.name)) {
+        document.getElementById('info').innerHTML =
+          `<h2>${city.name}</h2><p>${formatInZone(city.zone)}</p>`;
+      }
+    }
+  });
+}, 1000);
+</script>
+</body>
+</html>
